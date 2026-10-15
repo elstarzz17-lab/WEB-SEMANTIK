@@ -41,11 +41,7 @@ CREATE TABLE `audit_log` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Dumping data for table `audit_log`
---
-
-INSERT INTO `audit_log` (`id_audit`, `id_pengguna`, `tabel_nama`, `record_id`, `aksi`, `data_lama`, `data_baru`, `ip_address`, `user_agent`, `waktu`) VALUES
-(1, 6, 'pengguna', '6', 'LOGIN', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36', '2026-09-28 10:01:52');
+-- Audit log starts empty and is populated by real application events.
 
 -- --------------------------------------------------------
 
@@ -129,8 +125,7 @@ INSERT INTO `pengguna` (`id_pengguna`, `id_role`, `id_universitas`, `id_fakultas
 (2, 2, 1, 1, 1, 'operator.ti', '$2y$10$REPLACE_WITH_PASSWORD_HASH', 'Operator Program Studi Teknik Informatika', 'operator.ti@umb.ac.id', NULL, 'Aktif', NULL, '2026-09-28 02:53:26', '2026-09-28 02:53:26'),
 (3, 3, 1, 1, NULL, 'dekanat.ft', '$2y$10$REPLACE_WITH_PASSWORD_HASH', 'Operator Dekanat Fakultas Teknik', 'dekanat.ft@umb.ac.id', NULL, 'Aktif', NULL, '2026-09-28 02:53:26', '2026-09-28 02:53:26'),
 (4, 4, 1, NULL, NULL, 'rektorat', '$2y$10$REPLACE_WITH_PASSWORD_HASH', 'Operator Rektorat', 'rektorat@umb.ac.id', NULL, 'Aktif', NULL, '2026-09-28 02:53:27', '2026-09-28 02:53:27'),
-(5, 5, 1, 1, 1, '20260001', '$2y$10$REPLACE_WITH_PASSWORD_HASH', 'Contoh Mahasiswa', '20260001@student.umb.ac.id', NULL, 'Aktif', NULL, '2026-09-28 02:53:27', '2026-09-28 02:53:27'),
-(6, 1, 1, NULL, NULL, 'Admin', '$2y$10$HDxCEJy3pjBzPhKOPCyO2ucvD/GObtbU2rx5nf9HgrZ5IleU3xwte', 'Admin SIM Mhs UMB', 'harrywitriyono@umb.ac.id', NULL, 'Aktif', '2026-09-28 10:01:52', '2026-09-28 03:01:42', '2026-09-28 03:01:52');
+(5, 5, 1, 1, 1, '20260001', '$2y$10$REPLACE_WITH_PASSWORD_HASH', 'Contoh Mahasiswa', '20260001@student.umb.ac.id', NULL, 'Aktif', NULL, '2026-09-28 02:53:27', '2026-09-28 02:53:27');
 
 -- --------------------------------------------------------
 
@@ -159,6 +154,22 @@ INSERT INTO `program_studi` (`id_program_studi`, `id_fakultas`, `kode_program_st
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `dosen`
+--
+
+CREATE TABLE `dosen` (
+  `id_dosen` bigint(20) UNSIGNED NOT NULL,
+  `id_pengguna` bigint(20) UNSIGNED NOT NULL,
+  `id_program_studi` bigint(20) UNSIGNED NOT NULL,
+  `nidn` varchar(20) NOT NULL,
+  `status_aktif` enum('Aktif','Tidak Aktif') NOT NULL DEFAULT 'Aktif',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `roles`
 --
 
@@ -180,7 +191,8 @@ INSERT INTO `roles` (`id_role`, `kode_role`, `nama_role`, `keterangan`, `created
 (3, 'DEKANAT', 'Dekanat', 'Melihat data mahasiswa pada Fakultas yang menjadi kewenangannya', '2026-09-28 02:53:26'),
 (4, 'REKTORAT', 'Rektorat', 'Melihat data mahasiswa pada tingkat universitas', '2026-09-28 02:53:26'),
 (5, 'MAHASISWA', 'Mahasiswa', 'Melihat data pribadi/rekord mahasiswa sendiri', '2026-09-28 02:53:26'),
-(6, '55201', 'Prodi Teknik Informatika', NULL, '2026-09-28 03:07:56');
+(6, '55201', 'Prodi Teknik Informatika', NULL, '2026-09-28 03:07:56'),
+(7, 'DOSEN', 'Dosen', 'Mengakses profil dosen sendiri dan data semantik dalam scope yang diizinkan', '2026-09-28 03:07:56');
 
 -- --------------------------------------------------------
 
@@ -272,7 +284,7 @@ CREATE TABLE `v_profil_mahasiswa` (
 --
 DROP TABLE IF EXISTS `v_mahasiswa_per_prodi`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `v_mahasiswa_per_prodi`  AS SELECT `u`.`id_universitas` AS `id_universitas`, `u`.`kode_universitas` AS `kode_universitas`, `u`.`nama_universitas` AS `nama_universitas`, `f`.`id_fakultas` AS `id_fakultas`, `f`.`kode_fakultas` AS `kode_fakultas`, `f`.`nama_fakultas` AS `nama_fakultas`, `ps`.`id_program_studi` AS `id_program_studi`, `ps`.`kode_program_studi` AS `kode_program_studi`, `ps`.`nama_program_studi` AS `nama_program_studi`, `ps`.`jenjang` AS `jenjang`, `m`.`id_mahasiswa` AS `id_mahasiswa`, `m`.`npm` AS `npm`, `m`.`nama_mahasiswa` AS `nama_mahasiswa`, `m`.`jenis_kelamin` AS `jenis_kelamin`, CASE WHEN `m`.`jenis_kelamin` = 'L' THEN 'Laki-laki' WHEN `m`.`jenis_kelamin` = 'P' THEN 'Perempuan' END AS `jenis_kelamin_text`, `m`.`tempat_lahir` AS `tempat_lahir`, `m`.`tanggal_lahir` AS `tanggal_lahir`, `m`.`tanggal_masuk` AS `tanggal_masuk`, `m`.`alamat` AS `alamat`, `m`.`status_mahasiswa` AS `status_mahasiswa` FROM (((`mahasiswa` `m` join `program_studi` `ps` on(`m`.`id_program_studi` = `ps`.`id_program_studi`)) join `fakultas` `f` on(`ps`.`id_fakultas` = `f`.`id_fakultas`)) join `universitas` `u` on(`f`.`id_universitas` = `u`.`id_universitas`)) ;
+CREATE ALGORITHM=UNDEFINED SQL SECURITY INVOKER VIEW `v_mahasiswa_per_prodi`  AS SELECT `u`.`id_universitas` AS `id_universitas`, `u`.`kode_universitas` AS `kode_universitas`, `u`.`nama_universitas` AS `nama_universitas`, `f`.`id_fakultas` AS `id_fakultas`, `f`.`kode_fakultas` AS `kode_fakultas`, `f`.`nama_fakultas` AS `nama_fakultas`, `ps`.`id_program_studi` AS `id_program_studi`, `ps`.`kode_program_studi` AS `kode_program_studi`, `ps`.`nama_program_studi` AS `nama_program_studi`, `ps`.`jenjang` AS `jenjang`, `m`.`id_mahasiswa` AS `id_mahasiswa`, `m`.`npm` AS `npm`, `m`.`nama_mahasiswa` AS `nama_mahasiswa`, `m`.`jenis_kelamin` AS `jenis_kelamin`, CASE WHEN `m`.`jenis_kelamin` = 'L' THEN 'Laki-laki' WHEN `m`.`jenis_kelamin` = 'P' THEN 'Perempuan' END AS `jenis_kelamin_text`, `m`.`tempat_lahir` AS `tempat_lahir`, `m`.`tanggal_lahir` AS `tanggal_lahir`, `m`.`tanggal_masuk` AS `tanggal_masuk`, `m`.`alamat` AS `alamat`, `m`.`status_mahasiswa` AS `status_mahasiswa` FROM (((`mahasiswa` `m` join `program_studi` `ps` on(`m`.`id_program_studi` = `ps`.`id_program_studi`)) join `fakultas` `f` on(`ps`.`id_fakultas` = `f`.`id_fakultas`)) join `universitas` `u` on(`f`.`id_universitas` = `u`.`id_universitas`)) ;
 
 -- --------------------------------------------------------
 
@@ -281,7 +293,7 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW 
 --
 DROP TABLE IF EXISTS `v_profil_mahasiswa`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `v_profil_mahasiswa`  AS SELECT `m`.`id_mahasiswa` AS `id_mahasiswa`, `m`.`npm` AS `npm`, `m`.`nama_mahasiswa` AS `nama_mahasiswa`, `m`.`jenis_kelamin` AS `jenis_kelamin`, `m`.`tempat_lahir` AS `tempat_lahir`, `m`.`tanggal_lahir` AS `tanggal_lahir`, `m`.`tanggal_masuk` AS `tanggal_masuk`, `m`.`alamat` AS `alamat`, `m`.`status_mahasiswa` AS `status_mahasiswa`, `ps`.`kode_program_studi` AS `kode_program_studi`, `ps`.`nama_program_studi` AS `nama_program_studi`, `ps`.`jenjang` AS `jenjang`, `f`.`kode_fakultas` AS `kode_fakultas`, `f`.`nama_fakultas` AS `nama_fakultas`, `u`.`kode_universitas` AS `kode_universitas`, `u`.`nama_universitas` AS `nama_universitas` FROM (((`mahasiswa` `m` join `program_studi` `ps` on(`m`.`id_program_studi` = `ps`.`id_program_studi`)) join `fakultas` `f` on(`ps`.`id_fakultas` = `f`.`id_fakultas`)) join `universitas` `u` on(`f`.`id_universitas` = `u`.`id_universitas`)) ;
+CREATE ALGORITHM=UNDEFINED SQL SECURITY INVOKER VIEW `v_profil_mahasiswa`  AS SELECT `m`.`id_mahasiswa` AS `id_mahasiswa`, `m`.`npm` AS `npm`, `m`.`nama_mahasiswa` AS `nama_mahasiswa`, `m`.`jenis_kelamin` AS `jenis_kelamin`, `m`.`tempat_lahir` AS `tempat_lahir`, `m`.`tanggal_lahir` AS `tanggal_lahir`, `m`.`tanggal_masuk` AS `tanggal_masuk`, `m`.`alamat` AS `alamat`, `m`.`status_mahasiswa` AS `status_mahasiswa`, `ps`.`kode_program_studi` AS `kode_program_studi`, `ps`.`nama_program_studi` AS `nama_program_studi`, `ps`.`jenjang` AS `jenjang`, `f`.`kode_fakultas` AS `kode_fakultas`, `f`.`nama_fakultas` AS `nama_fakultas`, `u`.`kode_universitas` AS `kode_universitas`, `u`.`nama_universitas` AS `nama_universitas` FROM (((`mahasiswa` `m` join `program_studi` `ps` on(`m`.`id_program_studi` = `ps`.`id_program_studi`)) join `fakultas` `f` on(`ps`.`id_fakultas` = `f`.`id_fakultas`)) join `universitas` `u` on(`f`.`id_universitas` = `u`.`id_universitas`)) ;
 
 --
 -- Indexes for dumped tables
@@ -302,6 +314,15 @@ ALTER TABLE `audit_log`
 ALTER TABLE `fakultas`
   ADD PRIMARY KEY (`id_fakultas`),
   ADD UNIQUE KEY `uk_fakultas_univ_kode` (`id_universitas`,`kode_fakultas`);
+
+--
+-- Indexes for table `dosen`
+--
+ALTER TABLE `dosen`
+  ADD PRIMARY KEY (`id_dosen`),
+  ADD UNIQUE KEY `uk_dosen_pengguna` (`id_pengguna`),
+  ADD UNIQUE KEY `uk_dosen_nidn` (`nidn`),
+  ADD KEY `idx_dosen_prodi_status` (`id_program_studi`,`status_aktif`);
 
 --
 -- Indexes for table `mahasiswa`
@@ -369,10 +390,16 @@ ALTER TABLE `mahasiswa`
   MODIFY `id_mahasiswa` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
+-- AUTO_INCREMENT for table `dosen`
+--
+ALTER TABLE `dosen`
+  MODIFY `id_dosen` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `pengguna`
 --
 ALTER TABLE `pengguna`
-  MODIFY `id_pengguna` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id_pengguna` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `program_studi`
@@ -384,7 +411,7 @@ ALTER TABLE `program_studi`
 -- AUTO_INCREMENT for table `roles`
 --
 ALTER TABLE `roles`
-  MODIFY `id_role` smallint(5) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id_role` smallint(5) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT for table `universitas`
@@ -407,6 +434,13 @@ ALTER TABLE `audit_log`
 --
 ALTER TABLE `fakultas`
   ADD CONSTRAINT `fk_fakultas_universitas` FOREIGN KEY (`id_universitas`) REFERENCES `universitas` (`id_universitas`) ON UPDATE CASCADE;
+
+--
+-- Constraints for table `dosen`
+--
+ALTER TABLE `dosen`
+  ADD CONSTRAINT `fk_dosen_pengguna` FOREIGN KEY (`id_pengguna`) REFERENCES `pengguna` (`id_pengguna`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_dosen_prodi` FOREIGN KEY (`id_program_studi`) REFERENCES `program_studi` (`id_program_studi`) ON UPDATE CASCADE;
 
 --
 -- Constraints for table `mahasiswa`

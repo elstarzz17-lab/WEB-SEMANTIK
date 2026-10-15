@@ -181,6 +181,9 @@ if (!$result) {
 
                             <td>
                                 <div class="action-group">
+                                    <?php if ($data_pengguna['kode_role'] === 'DOSEN'): ?>
+                                        <a href="dosen.php" class="btn btn-sm btn-outline">Data Dosen</a>
+                                    <?php else: ?>
                                     <a
                                         href="pengguna_edit.php?id=<?= (int)$data_pengguna['id_pengguna'] ?>"
                                         class="btn btn-sm btn-outline"
@@ -208,6 +211,7 @@ if (!$result) {
                                             Hapus
                                         </button>
                                     </form>
+                                    <?php endif; ?>
                                 </div>
                             </td>
                         </tr>

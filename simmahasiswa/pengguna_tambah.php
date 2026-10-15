@@ -9,6 +9,7 @@ $roles = mysqli_query(
     $koneksi,
     "SELECT id_role, kode_role, nama_role
      FROM roles
+     WHERE kode_role <> 'DOSEN'
      ORDER BY id_role ASC"
 );
 
@@ -78,7 +79,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($error === '') {
         $stmt = mysqli_prepare(
             $koneksi,
-            "SELECT kode_role FROM roles WHERE id_role = ? LIMIT 1"
+            "SELECT kode_role FROM roles WHERE id_role = ? AND kode_role <> 'DOSEN' LIMIT 1"
         );
         mysqli_stmt_bind_param($stmt, 'i', $id_role);
         mysqli_stmt_execute($stmt);

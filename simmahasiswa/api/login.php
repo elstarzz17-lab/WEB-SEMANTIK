@@ -2,6 +2,7 @@
 
 header('Content-Type: application/json; charset=utf-8');
 
+require_once __DIR__ . '/../csrf.php';
 require_once '../koneksi.php';
 
 $response = [
@@ -217,6 +218,19 @@ try {
 
         exit;
     }
+
+    session_regenerate_id(true);
+    $_SESSION['login'] = true;
+    $_SESSION['id_pengguna'] = (int)$user['id_pengguna'];
+    $_SESSION['id_role'] = (int)$user['id_role'];
+    $_SESSION['kode_role'] = $user['kode_role'];
+    $_SESSION['nama_role'] = $user['nama_role'];
+    $_SESSION['id_universitas'] = $user['id_universitas'];
+    $_SESSION['id_fakultas'] = $user['id_fakultas'];
+    $_SESSION['id_program_studi'] = $user['id_program_studi'];
+    $_SESSION['username'] = $user['username'];
+    $_SESSION['nama_lengkap'] = $user['nama_lengkap'];
+    $_SESSION['email'] = $user['email'];
 
 
     /*

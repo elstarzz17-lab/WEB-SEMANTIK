@@ -59,7 +59,7 @@ if (!$role) {
     exit;
 }
 
-$role_inti = ['ADMIN', 'OPERATOR_PRODI', 'DEKANAT', 'REKTORAT', 'MAHASISWA'];
+$role_inti = ['ADMIN', 'OPERATOR_PRODI', 'DEKANAT', 'REKTORAT', 'MAHASISWA', 'DOSEN'];
 
 if (in_array($role['kode_role'], $role_inti, true)) {
     $_SESSION['error'] = 'Role inti sistem tidak boleh dihapus.';

@@ -1,6 +1,7 @@
 <?php
 require_once 'auth_check.php';
 require_once 'koneksi.php';
+require_once __DIR__ . '/dosen_helper.php';
 
 $role = $_SESSION['kode_role'] ?? '';
 $namaRole = $_SESSION['nama_role'] ?? '';
@@ -104,6 +105,9 @@ if ($role === 'MAHASISWA') {
         mysqli_stmt_close($stmt);
     }
 
+} elseif ($role === 'DOSEN') {
+    $jumlahMahasiswa = 0;
+
 } else {
     // ADMIN
     $res = mysqli_query($koneksi, "SELECT COUNT(*) AS total FROM mahasiswa");
@@ -111,6 +115,29 @@ if ($role === 'MAHASISWA') {
     if ($res) {
         $row = mysqli_fetch_assoc($res);
         $jumlahMahasiswa = (int)($row['total'] ?? 0);
+    }
+}
+
+[$dosenScopeSql, $dosenScopeTypes, $dosenScopeParams] = dosen_scope_clause();
+$jumlahDosen = 0;
+if ($role !== 'MAHASISWA') {
+    $stmt = mysqli_prepare(
+        $koneksi,
+        "SELECT COUNT(*) AS total
+         FROM dosen d
+         INNER JOIN program_studi ps ON ps.id_program_studi = d.id_program_studi
+         INNER JOIN fakultas f ON f.id_fakultas = ps.id_fakultas
+         INNER JOIN universitas u ON u.id_universitas = f.id_universitas
+         WHERE 1 = 1 {$dosenScopeSql}"
+    );
+    if ($stmt) {
+        dosen_bind_params($stmt, $dosenScopeTypes, $dosenScopeParams);
+        mysqli_stmt_execute($stmt);
+        $row = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt));
+        $jumlahDosen = (int)($row['total'] ?? 0);
+        mysqli_stmt_close($stmt);
+    } else {
+        error_log('Dashboard dosen count failed: ' . mysqli_error($koneksi));
     }
 }
 
@@ -244,7 +271,7 @@ if ($role === 'ADMIN') {
  * ========================================================= */
 $prodiLabel = 'Seluruh Program Studi';
 
-if ($role === 'OPERATOR_PRODI' && $idProdi > 0) {
+if (in_array($role, ['OPERATOR_PRODI', 'DOSEN'], true) && $idProdi > 0) {
 
     $stmt = mysqli_prepare(
         $koneksi,
@@ -371,6 +398,14 @@ if ($role === 'OPERATOR_PRODI' && $idProdi > 0) {
                 <div>
                     <span>Fakultas</span>
                     <strong><?= number_format($jumlahFakultas, 0, ',', '.') ?></strong>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">👩‍🏫</div>
+                <div>
+                    <span>Dosen pada Lingkup</span>
+                    <strong><?= number_format($jumlahDosen, 0, ',', '.') ?></strong>
                 </div>
             </div>
         <?php endif; ?>

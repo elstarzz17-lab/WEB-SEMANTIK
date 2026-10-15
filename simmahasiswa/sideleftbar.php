@@ -12,10 +12,19 @@ $role = $_SESSION['kode_role'] ?? '';
         <span>▦</span> Dashboard
     </a>
 
-    <?php if (in_array($role, ['ADMIN', 'OPERATOR_PRODI'], true)): ?>
+    <?php if (in_array($role, ['ADMIN', 'OPERATOR_PRODI', 'DEKANAT', 'REKTORAT', 'DOSEN'], true)): ?>
         <div class="sidebar-title">DATA AKADEMIK</div>
+    <?php endif; ?>
+
+    <?php if (in_array($role, ['ADMIN', 'OPERATOR_PRODI'], true)): ?>
         <a href="mahasiswa.php" class="sidebar-link">
             <span>👨‍🎓</span> Data Mahasiswa
+        </a>
+    <?php endif; ?>
+
+    <?php if (in_array($role, ['ADMIN', 'OPERATOR_PRODI', 'DEKANAT', 'REKTORAT', 'DOSEN'], true)): ?>
+        <a href="dosen.php" class="sidebar-link">
+            <span>👩‍🏫</span> <?= $role === 'DOSEN' ? 'Profil Saya' : 'Data Dosen' ?>
         </a>
     <?php endif; ?>
 
@@ -55,6 +64,13 @@ $role = $_SESSION['kode_role'] ?? '';
         <div class="sidebar-title">SISTEM</div>
         <a href="audit_log.php" class="sidebar-link">
             <span>📝</span> Audit Log
+        </a>
+    <?php endif; ?>
+
+    <?php if ($role !== ''): ?>
+        <div class="sidebar-title">WEB SEMANTIK</div>
+        <a href="semantik.php" class="sidebar-link">
+            <span>🔗</span> RDF / OWL / SPARQL
         </a>
     <?php endif; ?>
 </aside>

@@ -78,6 +78,9 @@ if (!$result) {
                             <td><?= htmlspecialchars($row['created_at']) ?></td>
                             <td>
                                 <div class="action-group">
+                                    <?php if (in_array($row['kode_role'], ['ADMIN', 'OPERATOR_PRODI', 'DEKANAT', 'REKTORAT', 'MAHASISWA', 'DOSEN'], true)): ?>
+                                        <span class="scope-text">Role inti</span>
+                                    <?php else: ?>
                                     <a class="btn btn-sm btn-outline" href="role_edit.php?id=<?= (int)$row['id_role'] ?>">Edit</a>
 
                                     <form action="role_hapus.php" method="post" onsubmit="return confirm('Hapus role ini?');">
@@ -85,6 +88,7 @@ if (!$result) {
                                         <input type="hidden" name="id_role" value="<?= (int)$row['id_role'] ?>">
                                         <button type="submit" class="btn btn-sm btn-danger">Hapus</button>
                                     </form>
+                                    <?php endif; ?>
                                 </div>
                             </td>
                         </tr>

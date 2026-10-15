@@ -66,6 +66,28 @@ if (!$data_pengguna) {
 
 $stmt = mysqli_prepare(
     $koneksi,
+    "SELECT id_dosen FROM dosen WHERE id_pengguna = ? LIMIT 1"
+);
+
+if (!$stmt) {
+    $_SESSION['error'] = 'Gagal memeriksa keterkaitan akun dosen.';
+    header('Location: pengguna.php');
+    exit;
+}
+
+mysqli_stmt_bind_param($stmt, 'i', $id_pengguna);
+mysqli_stmt_execute($stmt);
+$akun_dosen = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt));
+mysqli_stmt_close($stmt);
+
+if ($akun_dosen) {
+    $_SESSION['error'] = 'Akun ini terhubung ke data dosen. Hapus melalui menu Data Dosen.';
+    header('Location: pengguna.php');
+    exit;
+}
+
+$stmt = mysqli_prepare(
+    $koneksi,
     "DELETE FROM pengguna
      WHERE id_pengguna = ?"
 );

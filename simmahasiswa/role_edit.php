@@ -47,6 +47,12 @@ if (!$data_role) {
     exit;
 }
 
+if ($data_role['kode_role'] === 'DOSEN') {
+    $_SESSION['error'] = 'Role DOSEN merupakan role inti dan tidak dapat diubah.';
+    header('Location: role.php');
+    exit;
+}
+
 $error = '';
 
 /* =========================

@@ -15,10 +15,12 @@ if (!$id_pengguna) {
 
 $stmt = mysqli_prepare(
     $koneksi,
-    "SELECT id_pengguna, id_role, id_universitas, id_fakultas,
-            id_program_studi, username, nama_lengkap, email, no_hp, status_aktif
-     FROM pengguna
-     WHERE id_pengguna = ?
+    "SELECT p.id_pengguna, p.id_role, p.id_universitas, p.id_fakultas,
+            p.id_program_studi, p.username, p.nama_lengkap, p.email, p.no_hp,
+            p.status_aktif, r.kode_role
+     FROM pengguna p
+     INNER JOIN roles r ON r.id_role = p.id_role
+     WHERE p.id_pengguna = ?
      LIMIT 1"
 );
 
@@ -38,7 +40,13 @@ if (!$data_pengguna) {
     exit;
 }
 
-$roles = mysqli_query($koneksi, "SELECT id_role, kode_role, nama_role FROM roles ORDER BY id_role ASC");
+if ($data_pengguna['kode_role'] === 'DOSEN') {
+    $_SESSION['error'] = 'Kelola akun dosen melalui menu Data Dosen.';
+    header('Location: dosen.php');
+    exit;
+}
+
+$roles = mysqli_query($koneksi, "SELECT id_role, kode_role, nama_role FROM roles WHERE kode_role <> 'DOSEN' ORDER BY id_role ASC");
 $universitas = mysqli_query($koneksi, "SELECT id_universitas, kode_universitas, nama_universitas FROM universitas ORDER BY nama_universitas ASC");
 $fakultas = mysqli_query($koneksi, "SELECT id_fakultas, id_universitas, kode_fakultas, nama_fakultas FROM fakultas ORDER BY nama_fakultas ASC");
 $prodi = mysqli_query($koneksi, "SELECT id_program_studi, id_fakultas, kode_program_studi, nama_program_studi FROM program_studi ORDER BY nama_program_studi ASC");
@@ -86,7 +94,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $kode_role = '';
 
     if ($error === '') {
-        $stmt = mysqli_prepare($koneksi, "SELECT kode_role FROM roles WHERE id_role = ? LIMIT 1");
+        $stmt = mysqli_prepare($koneksi, "SELECT kode_role FROM roles WHERE id_role = ? AND kode_role <> 'DOSEN' LIMIT 1");
         mysqli_stmt_bind_param($stmt, 'i', $id_role);
         mysqli_stmt_execute($stmt);
         $result = mysqli_stmt_get_result($stmt);
